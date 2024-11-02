@@ -3,12 +3,12 @@ import pandas as pd
 import numpy as np
 
 class DataPreprocessing:
-    def GetTenzor(self, team_A_data, team_H_data):
+    def GetTensor(self, team_A_data, team_H_data):
         A_data = self.Processing(team_A_data)
         H_data = self.Processing(team_H_data)
 
-        Tenzor = self.Tenzor(A_data, H_data)
-        return Tenzor                                                               # return torch.Tensor
+        Tensor = self.Tenzor(A_data, H_data)
+        return Tensor                                                               # return torch.Tensor
 
     def Processing(self, data):
         data = pd.DataFrame(data)

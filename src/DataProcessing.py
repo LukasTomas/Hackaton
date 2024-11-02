@@ -13,13 +13,11 @@ class DataPreprocessing:
     def Processing(self, data):
         data = pd.DataFrame(data)
         data = self.Change_Date(data)
-        data = self.Destroy_Open(data)
         return data
 
     def Tenzor(self, data_team1, data_team2):
         data_team1 = pd.DataFrame(data_team1)
         data_team2 = pd.DataFrame(data_team2)
-
         data = pd.concat([data_team1, data_team2], ignore_index=True)
         data = data.to_numpy().flatten().astype(np.float32)
         return torch.tensor(data)
@@ -29,12 +27,9 @@ class DataPreprocessing:
         data_to_transform["Month"] = pd.NA
         for index ,row in data_to_transform.iterrows():
             Date = row["Date"]
-            Digits = Date.split("-")
-            data_to_transform.loc[index, ["Day"]] = int(Digits[2])
+            Digits = ((str)(Date)).split("-")
+            LastDigits = Digits[2].split(" ")
+            data_to_transform.loc[index, ["Day"]] = int(LastDigits[0])
             data_to_transform.loc[index, ["Month"]] = int(Digits[1])
         data_to_transform.drop(columns=["Date"], inplace=True)
-        return data_to_transform
-
-    def Destroy_Open(self, data_to_transform):
-        data_to_transform.drop(columns=["Open"], inplace=True)                      # Other date which tells when the betting has been opened (i guess?)
         return data_to_transform

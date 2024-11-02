@@ -9,6 +9,7 @@ class Database:
     def Inicialization(self):                                           # Inicialization on GAMES_FILE
         filecontent = pd.read_csv(GAMES_FILE)
         filecontent.drop(columns=["Unnamed: 0"], inplace=True)
+        filecontent.drop(columns=["Open"], inplace=True)
         for index, row in filecontent.iterrows():
             self.Games.append(row)
 
@@ -21,10 +22,8 @@ class Database:
             self.Team_Update(AID)
             self.Incrementor += 1
 
-
     def UpdateGames(self, data):
         content = pd.DataFrame(data)                                                   # TODO
-        content.drop(columns=["Unnamed: 0"], inplace=True)
         for index, row in content.iterrows():
             self.Games.append(row)
 

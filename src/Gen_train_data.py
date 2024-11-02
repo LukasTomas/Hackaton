@@ -4,7 +4,7 @@ import os
 from hyperparams import GAMES_FILE, PLAYERS_FILE
 
 train_data_size = 0.8
-test_data_size = 0.2
+
 folder = "Test_data"
 train_file = os.path.join(folder, "train_file.csv")
 test_file = os.path.join(folder, "test_file.csv")

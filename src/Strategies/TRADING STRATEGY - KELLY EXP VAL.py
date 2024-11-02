@@ -18,7 +18,8 @@ odds_A = 1.916195
 bankroll = 1000
 # if you bet -> min bet = 1
 # max bet = 100
-
+min_bet = 1
+max_bet = 100
 
 # Kelly's criterion
 

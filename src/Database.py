@@ -22,8 +22,8 @@ class Database:
             self.Incrementor += 1
 
 
-    def Update(self):
-        content = ...                                                   # TODO
+    def UpdateGames(self, data):
+        content = pd.DataFrame(data)                                                   # TODO
         content.drop(columns=["Unnamed: 0"], inplace=True)
         for index, row in content.iterrows():
             self.Games.append(row)
@@ -48,17 +48,12 @@ class Database:
     def Return_team_data(self, Team_ID):
         self.Dictionary_Update(Team_ID)
         Games_Ids = self.Teams_dictionary[Team_ID].Return_last_x_matches_id(INPUT_MATCH_COUNT)
+        Games_Ids.reverse()                                             # Makes sure you go from newest to oldest games
         Data = []
         for GameId in Games_Ids:
             Data.append(self.Games[GameId])
 
-        Data.reverse()                                                  # Makes sure you go from newest to oldest games
-
-        for i in range(INPUT_MATCH_COUNT - self.Teams_dictionary[Team_ID].History_size()): # Appends 0 to blank entries
-            Data.append(0)
-
         return Data
-
 
 class Team:
     def __init__(self, Id):

@@ -42,14 +42,16 @@ def strat_kelly_exp_value(our_prob_h, odds_H, odds_A, bankroll):
 
     if EV_h > 1:
         investment = kelly_criterion(our_prob_h, odds_H) * bankroll
-        betH = investment
         betA = 0
+        betH = investment
     elif EV_a > 1:
         investment = kelly_criterion(our_prob_a, odds_A) * bankroll
         betA = investment
         betH = 0
     else:
-        investment = 0
+        betA = 0
+        betH = 0
+        
 
     # output
     # send to Bets DataFrame

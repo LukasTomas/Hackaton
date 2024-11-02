@@ -43,10 +43,14 @@ def strat_kelly_exp_value(our_prob_h, odds_H, odds_A, bankroll):
 
     if EV_h > 1:
         investment = kelly_criterion(our_prob_h, odds_H) * bankroll
+        if investment > max_bet:
+            investment = max_bet               
         betA = 0
         betH = investment
     elif EV_a > 1:
         investment = kelly_criterion(our_prob_a, odds_A) * bankroll
+        if investment > max_bet:
+            investment = max_bet   
         betA = investment
         betH = 0
     else:

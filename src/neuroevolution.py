@@ -68,7 +68,7 @@ def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
 
 
 rnd_tensor = torch.rand(1, NN_INPUT_SIZE)
-evaluator = Evaluator(games_percent=0.1)
+evaluator = Evaluator(games_percent=0.01)
 def evaluate(individual):
     neural_network = create_nn(individual)
     bankroll = evaluator.evaluate(neural_network)
@@ -111,14 +111,16 @@ if __name__ == "__main__":
     # toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.5)
     toolbox.register("mutate", mutate)
     # toolbox.register("mate", tools.cxBlend, alpha=0.5)
-    toolbox.register("mate", blx_alpha_crossover)
+    toolbox.register("mate", uniform_crossover)
     for gen_i in range(GENERATIONS):
         print(f"Generation {gen_i}", len(population))
 
 
         # Step 1: Evaluate each individual in the population
+        fitness_vals = []
         for indiv in population:
             indiv.fitness.values = toolbox.evaluate(indiv)
+            fitness_vals.append(indiv.fitness.values[0])
 
         # Step 2: Tournament Selection
         selected_indivs = toolbox.select(population, SELECTION_SIZE)

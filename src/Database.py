@@ -9,7 +9,6 @@ class Database:
     def Inicialization(self):                                           # Inicialization on GAMES_FILE
         filecontent = pd.read_csv(GAMES_FILE)
         filecontent.drop(columns=["Unnamed: 0"], inplace=True)
-        filecontent.drop(columns=["Open"], inplace=True)
         for index, row in filecontent.iterrows():
             self.Games.append(row)
 

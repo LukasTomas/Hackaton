@@ -13,6 +13,7 @@ class DataPreprocessing:
     def Processing(self, data):
         data = pd.DataFrame(data)
         data = self.Change_Date(data)
+        data = self.Destroy_Open(data)
         return data
 
     def Tenzor(self, data_team1, data_team2):
@@ -23,13 +24,19 @@ class DataPreprocessing:
         return torch.tensor(data)
 
     def Change_Date(self, data_to_transform):                                       # Changing Date to int (in the process year is lost)
-        data_to_transform["Day"] = pd.NA
-        data_to_transform["Month"] = pd.NA
-        for index ,row in data_to_transform.iterrows():
-            Date = row["Date"]
-            Digits = ((str)(Date)).split("-")
-            LastDigits = Digits[2].split(" ")
-            data_to_transform.loc[index, ["Day"]] = int(LastDigits[0])
-            data_to_transform.loc[index, ["Month"]] = int(Digits[1])
-        data_to_transform.drop(columns=["Date"], inplace=True)
+        if "Date" in data_to_transform.columns:
+            data_to_transform["Day"] = pd.NA
+            data_to_transform["Month"] = pd.NA
+            for index ,row in data_to_transform.iterrows():
+                Date = row["Date"]
+                Digits = ((str)(Date)).split("-")
+                LastDigits = Digits[2].split(" ")
+                data_to_transform.loc[index, ["Day"]] = int(LastDigits[0])
+                data_to_transform.loc[index, ["Month"]] = int(Digits[1])
+            data_to_transform.drop(columns=["Date"], inplace=True)
+        return data_to_transform
+
+    def Destroy_Open(self, data_to_transform):
+        if "Open" in data_to_transform:
+            data_to_transform.drop(columns=["Open"], inplace=True)
         return data_to_transform

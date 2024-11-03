@@ -6,7 +6,8 @@ import math
 from deap import base, creator, tools, algorithms
 
 import nn
-from hyperparams import POPULATION_SIZE, GENERATIONS, CROSSOVER_PROB, MUTATION_PROB, SELECTION_SIZE, NN_INPUT_SIZE
+from hyperparams import POPULATION_SIZE, GENERATIONS, CROSSOVER_PROB, MUTATION_PROB, SELECTION_SIZE, NN_INPUT_SIZE, \
+    MUTATION_STRENGTH, ELITE_COUNT
 from evaluation import Evaluator
 
 
@@ -39,7 +40,9 @@ def init_population():
     for _ in range(POPULATION_SIZE):
         neural_network = nn.LinearNN()  # Initialize the neural network
         params = list(neural_network.state_dict().values())
-        flat_params = [p.item() for tensor in params for p in tensor.flatten()]  # Flatten tensors
+        # Initialize neural network and get flattened parameters more cleanly
+        flat_params = torch.cat([p.flatten() for p in neural_network.parameters()]).tolist()
+
         individual = creator.Individual(flat_params)  # Create individual with flattened params
         population.append(individual)
     return population
@@ -60,20 +63,31 @@ def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
     for i in range(len(individual)):
         if random.random() < mutation_rate:  # Decide whether to mutate this parameter
             # Apply a small random change to the parameter
-            mutation = random.uniform(-mutation_strength, mutation_strength)
+            mutation = random.gauss(0, mutation_strength)
             individual[i] += mutation  # Update the individual's parameter
 
 
 rnd_tensor = torch.rand(1, NN_INPUT_SIZE)
-evaluator = Evaluator(games_percent=0.01)
+evaluator = Evaluator(games_percent=0.1)
 def evaluate(individual):
     neural_network = create_nn(individual)
     bankroll = evaluator.evaluate(neural_network)
+    #
     # prediction = neural_network(rnd_tensor)[0][0].item()
+    # output = 1 / (abs(prediction - 0.69) + 1e-6)
 
-    # output = 1/(abs(prediction-0.69))
     return bankroll,
 
+
+def blx_alpha_crossover(parent1, parent2, alpha=0.5):
+    child1, child2 = [], []
+    for p1, p2 in zip(parent1, parent2):
+        min_val, max_val = min(p1, p2), max(p1, p2)
+        interval = max_val - min_val
+        lower, upper = min_val - interval * alpha, max_val + interval * alpha
+        child1.append(random.uniform(lower, upper))
+        child2.append(random.uniform(lower, upper))
+    return creator.Individual(child1), creator.Individual(child2)
 
 def uniform_crossover(parent1, parent2, prob=0.5):
     child1, child2 = parent1[:], parent2[:]
@@ -92,66 +106,58 @@ if __name__ == "__main__":
     toolbox = base.Toolbox()
     toolbox.register("evaluate", evaluate)
 
-    # Roulette - assigns a higher probability of selection to individuals with higher fitness function
-    #            values, but does not guarantee selection of the best individual
-    # toolbox.register("select", tools.selRoulette)    
-    toolbox.register("select", tools.selBest)
+    toolbox.register("select", tools.selTournament, tournsize=3)
 
+    # toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.5)
     toolbox.register("mutate", mutate)
-    toolbox.register("mate", uniform_crossover)
-
+    # toolbox.register("mate", tools.cxBlend, alpha=0.5)
+    toolbox.register("mate", blx_alpha_crossover)
     for gen_i in range(GENERATIONS):
         print(f"Generation {gen_i}", len(population))
 
-        # evaluate each individual in the population
+
+        # Step 1: Evaluate each individual in the population
         for indiv in population:
             indiv.fitness.values = toolbox.evaluate(indiv)
 
+        # Step 2: Tournament Selection
+        selected_indivs = toolbox.select(population, SELECTION_SIZE)
+        min_fitness = min(ind.fitness.values[0] for ind in selected_indivs)
+        weights = [(ind.fitness.values[0] - min_fitness + 1e-6) for ind in selected_indivs]
 
-        print("Population fitness:")
-        for indiv in population:
-            print(indiv.fitness.values[0], end=" ")
+        # Step 3: Elitism - Preserve a small number of the best individuals
+        elites = tools.selBest(population, ELITE_COUNT)
 
-        # select the --hyperparameter-- best individuals
-        best_indivs = sorted(population, key=lambda ind: ind.fitness.values[0], reverse=True)[:SELECTION_SIZE]
-
-        # Clone the best individuals
-        best_indivs = list(map(toolbox.clone, best_indivs))
-
-        print("\nBest individuals fitness:")
-        for indiv in best_indivs:
-            print(indiv.fitness.values[0], end=" ")
-            del indiv.fitness.values
-        print()
-        neural_network = create_nn(best_indivs[0])
-        prediction = neural_network(rnd_tensor)[0][0].item()
-        print("Best model is outputting: ", prediction)
-        print()
-
-        # crossover the best individuals
+        print(f"Generation {gen_i} - Max: {max(fitness_vals)}, Min: {min(fitness_vals)}, Mean: {np.mean(fitness_vals)}")
+        # Step 4: Weighted Selection for Parents Based on Profit (Fitness)
         offspring = []
-        while len(offspring) + len(best_indivs) < POPULATION_SIZE:
+        # for elite in elites:
+        #     offspring.extend(list(map(toolbox.clone, elites)))
+
+        # Calculate alpha based on current
+
+        while len(offspring) + len(elites) < POPULATION_SIZE:
             # Select pairs of parents from the best individuals for crossover
-            parent1, parent2 = random.sample(best_indivs, 2)
+            parent1, parent2 = random.choices(selected_indivs, weights=weights, k=2)
 
             # Apply crossover and mutation
             child1, child2 = toolbox.mate(parent1, parent2)
-            toolbox.mutate(child1, mutation_strength=0.1)
-            # toolbox.mutate(child2, mutation_strength=0.1)
-
-            # Invalidate fitness for children to ensure they're re-evaluated
-            del child1.fitness.values
-            del child2.fitness.values
 
             # Add children to offspring, checking not to exceed population size
             offspring.extend([child1, child2])
 
         # Trim any extra offspring if we exceeded the population size
-        offspring = offspring[:POPULATION_SIZE - len(best_indivs)]
+        offspring = offspring[:POPULATION_SIZE - len(elites)]
 
+        # Step 5: Adaptive Mutation for Offspring
+        mutation_strength = MUTATION_STRENGTH * (1 - gen_i / GENERATIONS)
+        for child in offspring:
+            toolbox.mutate(child, MUTATION_PROB, mutation_strength)
+            # toolbox.mutate(child, sigma=mutation_strength, indpb=MUTATION_PROB)
+            del child.fitness.values
 
         # Combine best individuals and offspring to form the new population
-        population = best_indivs + offspring
+        population = elites + offspring
 
         assert len(population) == POPULATION_SIZE
 

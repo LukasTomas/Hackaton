@@ -11,7 +11,7 @@ import random
 class Model:
     def __init__(self, neuralNetwork=None):
         self.database = Database()
-        #self.database.Inicialization()
+        # self.database.Inicialization()
         self.data_processing = DataProcessing.DataPreprocessing()
 
         if neuralNetwork is None:
@@ -36,9 +36,17 @@ class Model:
             AID = row["AID"]
             Team_H_data = self.database.Return_team_data(HID)
             Team_A_data = self.database.Return_team_data(AID)
-            if ((Team_A_data.shape[0] == INPUT_MATCH_COUNT) and (
-                    Team_H_data.shape[0] == INPUT_MATCH_COUNT)):  # TODO Not sure with the shape[index]
-                tensor = self.data_processing.GetTensor(Team_A_data, Team_H_data)
+            # Team_H_data = self.database.Return_team_data(HID)
+            # Team_A_data = self.database.Return_team_data(AID)
+
+            if ((len(Team_A_data) == INPUT_MATCH_COUNT) and (
+                    len(Team_H_data) == INPUT_MATCH_COUNT)):  # TODO Not sure with the shape[index]
+                # tensor = self.data_processing.GetTensor(Team_A_data, Team_H_data)
+                int_list = []
+                for team in [Team_A_data, Team_H_data]:
+                    for series in team:
+                        int_list.extend(series.values)
+                tensor = torch.tensor(int_list).float()
                 our_prob_H = self.model(tensor).item()
                 # our_prob_H = random.uniform(0, 1)
                 opps.loc[index, ["ProH"]] = our_prob_H

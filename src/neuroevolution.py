@@ -7,6 +7,7 @@ from deap import base, creator, tools, algorithms
 
 import nn
 from hyperparams import POPULATION_SIZE, GENERATIONS, CROSSOVER_PROB, MUTATION_PROB, SELECTION_SIZE, NN_INPUT_SIZE
+from evaluation import Evaluator
 
 
 def create_nn(individual):
@@ -64,11 +65,14 @@ def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
 
 
 rnd_tensor = torch.rand(1, NN_INPUT_SIZE)
+evaluator = Evaluator(games_percent=0.01)
 def evaluate(individual):
     neural_network = create_nn(individual)
-    prediction = neural_network(rnd_tensor)[0][0].item()
-    output = 1/(abs(prediction-0.69))
-    return output,
+    bankroll = evaluator.evaluate(neural_network)
+    # prediction = neural_network(rnd_tensor)[0][0].item()
+
+    # output = 1/(abs(prediction-0.69))
+    return bankroll,
 
 
 def uniform_crossover(parent1, parent2, prob=0.5):

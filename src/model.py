@@ -9,16 +9,16 @@ from hyperparams import INPUT_MATCH_COUNT
 import random
 
 class Model:
-    def __init__(self, nn=None):
+    def __init__(self, neuralNetwork=None):
         self.database = Database()
         #self.database.Inicialization()
         self.data_processing = DataProcessing.DataPreprocessing()
 
-        if nn is None:
+        if neuralNetwork is None:
             self.model = nn.LinearNN()
             self.model.load_state_dict(torch.load("best_nn.pth"))
         else:
-            self.model = nn
+            self.model = neuralNetwork
 
     def place_bets(self, summary: pd.DataFrame, opps: pd.DataFrame, inc: tuple[pd.DataFrame, pd.DataFrame]):
         self.database.UpdateGames(inc[0])

@@ -11,7 +11,7 @@ for f in [PLAYERS_FILE, GAMES_FILE]:
 # games = pd.read_csv(GAMES_FILE)
 
 INPUT_MATCH_COUNT = 5                       # Number of input matches for neural network
-MATCH_DATAPOINT_COUNT = 41 #games.shape[1] - 1  # Number of datapoints per match; -1 to exclude 'Unnamed: 0' column
+MATCH_DATAPOINT_COUNT = 39 #games.shape[1] - 1  # Number of datapoints per match; -1 to exclude 'Unnamed: 0' column
 
 INPUT_TEAM_COUNT = INPUT_MATCH_COUNT * MATCH_DATAPOINT_COUNT
 NN_INPUT_SIZE = INPUT_TEAM_COUNT * 2
@@ -20,8 +20,8 @@ STACK_SIZE = 50
 
 # hyperparameters for evaluation
 GENERATIONS = 50
-POPULATION_SIZE = 20
-assert POPULATION_SIZE % 2 == 0, "Population size must be odd"
+POPULATION_SIZE = 4
+assert POPULATION_SIZE >= 2, "Population size must be at least 2"
 
 SELECTION_RATIO = 0.5
 SELECTION_SIZE = int(POPULATION_SIZE * SELECTION_RATIO)

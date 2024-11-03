@@ -8,18 +8,24 @@ import nn
 from hyperparams import INPUT_MATCH_COUNT
 
 class Model:
-    def __init__(self):
+    def __init__(self, nn=None):
         self.database = Database()
         self.database.Inicialization()
         self.data_processing = DataProcessing.DataPreprocessing()
-        self.model = nn.LinearNN()
-        self.model.load_state_dict(torch.load("best_nn.pth"))
+
+        if nn is None:
+            self.model = nn.LinearNN()
+            self.model.load_state_dict(torch.load("best_nn.pth"))
+        else:
+            self.model = nn
+
     def place_bets(self, summary: pd.DataFrame, opps: pd.DataFrame, inc: tuple[pd.DataFrame, pd.DataFrame]):
         self.database.UpdateGames(inc[0])
         opps = self.Gen_our_probability(opps)
         opps = self.Modify_opps_for_strategie(opps)
         bets = Strat(summary, opps)
         bets = self.Modify_bets(bets)
+        # bets = pd.DataFrame(columns=["BetH", "BetA"])
         return bets
     def Gen_our_probability(self, opps):
         opps["ProH"] = pd.NA

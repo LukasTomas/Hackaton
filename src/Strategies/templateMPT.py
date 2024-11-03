@@ -2,10 +2,6 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
-# Data provided
-p = np.array([0.5, 0.5, 0.6, 0.4, 0.7, 0.3, 0.65, 0.35,0.8,0.2,0.7,0.3,0.67,0.23])
-o = np.array([1.930235, 1.916195, 1.418280, 3.048582, 1.520244, 2.650582, 1.491004, 2.74833,1.302708,3.808664,1.471073,2.821692,1.505497,2.695813])
-m = 0.1  # Maximum allocation per asset
 
 
 def Strategie(summary, opps):

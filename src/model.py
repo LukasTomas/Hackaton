@@ -6,14 +6,16 @@ import DataProcessing
 import torch
 import nn
 from hyperparams import INPUT_MATCH_COUNT
+import random
 
 class Model:
     def __init__(self):
         self.database = Database()
-        self.database.Inicialization()
+        #self.database.Inicialization()
         self.data_processing = DataProcessing.DataPreprocessing()
         self.model = nn.LinearNN()
         self.model.load_state_dict(torch.load("best_nn.pth"))
+
     def place_bets(self, summary: pd.DataFrame, opps: pd.DataFrame, inc: tuple[pd.DataFrame, pd.DataFrame]):
         self.database.UpdateGames(inc[0])
         opps = self.Gen_our_probability(opps)
@@ -21,6 +23,7 @@ class Model:
         bets = Strat(summary, opps)
         bets = self.Modify_bets(bets)
         return bets
+    
     def Gen_our_probability(self, opps):
         opps["ProH"] = pd.NA
         for index, row in opps.iterrows():
@@ -32,6 +35,7 @@ class Model:
                     Team_H_data.shape[0] == INPUT_MATCH_COUNT)):  # TODO Not sure with the shape[index]
                 tensor = self.data_processing.GetTensor(Team_A_data, Team_H_data)
                 our_prob_H = self.model(tensor).item()
+                # our_prob_H = random.uniform(0, 1)
                 opps.loc[index, ["ProH"]] = our_prob_H
         return opps
 
@@ -45,6 +49,6 @@ class Model:
 
     def Modify_bets(self, bets):
         # TODO
-        bets.drop(columns=["Date", "OddH", "OddsA", "BetH", "BetA", "ProH"], inplace=True)
+        bets.drop(columns=["Date", "OddsH", "OddsA", "BetH", "BetA", "ProH"], inplace=True)
         bets.rename(columns = {"NewBetH" : "BetH", "NewBetA" : "BetA"}, inplace=True)
         return bets

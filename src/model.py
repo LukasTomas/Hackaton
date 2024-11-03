@@ -6,7 +6,6 @@ import DataProcessing
 import torch
 import nn
 from hyperparams import INPUT_MATCH_COUNT
-
 class Model:
     def __init__(self):
         self.database = Database()
@@ -26,8 +25,8 @@ class Model:
         for index, row in opps.iterrows():
             HID = row["HID"]
             AID = row["AID"]
-            Team_H_data = pd.DataFrame(self.database.Return_team_data(HID))
-            Team_A_data = pd.DataFrame(self.database.Return_team_data(AID))
+            Team_H_data = self.database.Return_team_data(HID)
+            Team_A_data = self.database.Return_team_data(AID)
             if ((Team_A_data.shape[0] == INPUT_MATCH_COUNT) and (
                     Team_H_data.shape[0] == INPUT_MATCH_COUNT)):  # TODO Not sure with the shape[index]
                 tensor = self.data_processing.GetTensor(Team_A_data, Team_H_data)

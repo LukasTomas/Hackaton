@@ -1,6 +1,7 @@
 from hyperparams import GAMES_FILE, PLAYERS_FILE, STACK_SIZE, INPUT_MATCH_COUNT
 from collections import deque
 import pandas as pd
+import time
 class Database:
     def __init__(self):
         self.Games = []
@@ -47,11 +48,13 @@ class Database:
         self.Dictionary_Update(Team_ID)
         Games_Ids = self.Teams_dictionary[Team_ID].Return_last_x_matches_id(INPUT_MATCH_COUNT)
         Games_Ids.reverse()                                             # Makes sure you go from newest to oldest games
-        Data = []
-        for GameId in Games_Ids:
-            Data.append(self.Games[GameId])
+        data_frames = [self.Games[GameId] for GameId in Games_Ids]
 
-        return Data
+        if data_frames:
+            data_frame = pd.concat(data_frames, ignore_index=True)
+        else:
+            data_frame = pd.DataFrame()
+        return data_frame
 
 class Team:
     def __init__(self, Id):

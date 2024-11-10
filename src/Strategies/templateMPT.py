@@ -73,6 +73,7 @@ def Strategie(summary, opps):
          # Check if the optimization was successful
         if not result.success:
             print("Optimization failed:", result.message)
+            b_scaled = [0 for i in range(0,len(p))]
         else:
             # Bereme optimální řeš.
             x_optimal = result.x

@@ -68,7 +68,7 @@ def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
 
 
 rnd_tensor = torch.rand(1, NN_INPUT_SIZE)
-evaluator = Evaluator(games_percent=0.01)
+evaluator = Evaluator(games_percent=0.2)
 def evaluate(individual):
     neural_network = create_nn(individual)
     bankroll = evaluator.evaluate(neural_network)
@@ -121,6 +121,11 @@ if __name__ == "__main__":
         for indiv in population:
             indiv.fitness.values = toolbox.evaluate(indiv)
             fitness_vals.append(indiv.fitness.values[0])
+
+
+        select_best = tools.selBest(population, 1)[0]
+        best_nn = create_nn(select_best)
+        torch.save(best_nn.state_dict(), 'new_best_nn.pth')
 
         # Step 2: Tournament Selection
         selected_indivs = toolbox.select(population, SELECTION_SIZE)

@@ -9,8 +9,6 @@ class LinearNN(nn.Module):
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(NN_INPUT_SIZE, 128),
             nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
             nn.Linear(128, 32),
             nn.ReLU(),
             nn.Linear(32, 1),

@@ -1,14 +1,16 @@
 import time
+import math
 import torch
 import random
+import threading
 import numpy as np
-import math
+from collections import deque
 from deap import base, creator, tools, algorithms
 
+from evaluation import Evaluator
 import nn
 from hyperparams import POPULATION_SIZE, GENERATIONS, CROSSOVER_PROB, MUTATION_PROB, SELECTION_SIZE, NN_INPUT_SIZE, \
     MUTATION_STRENGTH, ELITE_COUNT
-from evaluation import Evaluator
 
 
 def create_nn(individual):
@@ -33,7 +35,6 @@ def create_nn(individual):
     neural_network.load_state_dict(state_dict)
     return neural_network
 
-
 def init_population():
     population = []
 
@@ -46,9 +47,6 @@ def init_population():
         individual = creator.Individual(flat_params)  # Create individual with flattened params
         population.append(individual)
     return population
-
-random.seed(time.time())
-
 
 def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
     """
@@ -66,18 +64,11 @@ def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
             mutation = random.gauss(0, mutation_strength)
             individual[i] += mutation  # Update the individual's parameter
 
-
-rnd_tensor = torch.rand(1, NN_INPUT_SIZE)
-evaluator = Evaluator(games_percent=0.2)
 def evaluate(individual):
     neural_network = create_nn(individual)
+    evaluator = Evaluator(games_percent=0.01)
     bankroll = evaluator.evaluate(neural_network)
-    #
-    # prediction = neural_network(rnd_tensor)[0][0].item()
-    # output = 1 / (abs(prediction - 0.69) + 1e-6)
-
     return bankroll,
-
 
 def blx_alpha_crossover(parent1, parent2, alpha=0.5):
     child1, child2 = [], []
@@ -96,8 +87,21 @@ def uniform_crossover(parent1, parent2, prob=0.5):
             child1[k], child2[k] = child2[k], child1[k]  # Swap parameter values
     return creator.Individual(child1), creator.Individual(child2)
 
+def thread_evaluate(deque_population, deque_lock, toolbox, thrad_id):
+    while True:
+        with deque_lock:
+            if len(deque_population) == 0:
+                return
+
+            inidividual = deque_population.popleft()
+    
+        # print(f"Thread {thrad_id} choosing individual {inidividual[0]}")
+        inidividual.fitness.values = toolbox.evaluate(inidividual)
+        # print(f"Thread {thrad_id} finished evaluating individual {inidividual.fitness.values[0]}")
 
 if __name__ == "__main__":
+    random.seed(time.time())
+    
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
@@ -112,14 +116,30 @@ if __name__ == "__main__":
     toolbox.register("mutate", mutate)
     # toolbox.register("mate", tools.cxBlend, alpha=0.5)
     toolbox.register("mate", uniform_crossover)
+
+    threads_number = 8
+
     for gen_i in range(GENERATIONS):
         print(f"Generation {gen_i}", len(population))
 
 
         # Step 1: Evaluate each individual in the population
+        threads = []
+
+        # deque_population = deque(enumerate(population))
+        deque_population = deque(population)
+
+        deque_lock = threading.Lock()
+        for thread_id in range(threads_number):
+            thread = threading.Thread(target=thread_evaluate, args=(deque_population, deque_lock, toolbox, thread_id))
+            threads.append(thread)
+            thread.start()
+        
+        for thread in threads:
+            thread.join()
+
         fitness_vals = []
         for indiv in population:
-            indiv.fitness.values = toolbox.evaluate(indiv)
             fitness_vals.append(indiv.fitness.values[0])
 
 

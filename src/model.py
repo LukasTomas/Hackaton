@@ -2,11 +2,13 @@ import numpy as np
 import pandas as pd
 from Database import Database
 from Strategies.trading_strategy_kelly_exp_val import strat_kelly_exp_value as Strat
-import DataProcessing
+import random
 import torch
 import nn
+import os
+
+import DataProcessing
 from hyperparams import INPUT_MATCH_COUNT
-import random
 
 class Model:
     def __init__(self, neuralNetwork=None):
@@ -16,7 +18,7 @@ class Model:
 
         if neuralNetwork is None:
             self.model = nn.LinearNN()
-            self.model.load_state_dict(torch.load("best_nn.pth"))
+            self.model.load_state_dict(torch.load(os.path.join('.', 'models', "new_best_nn_1.pth")))
         else:
             self.model = neuralNetwork
 

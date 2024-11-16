@@ -5,7 +5,8 @@ class Database:
     def __init__(self):
         self.Games = []
         self.Teams_dictionary = {}
-        self.Incrementor = 0                                            # Makes sure that each game have its own ID
+        self.Incrementor = 0   
+                                                 # Makes sure that each game have its own ID
     def Inicialization(self):                                           # Inicialization on GAMES_FILE
         filecontent = pd.read_csv(GAMES_FILE)
         filecontent.drop(columns=["Unnamed: 0"], inplace=True)
@@ -25,6 +26,11 @@ class Database:
         content = pd.DataFrame(data)
         if "Date" in content.columns:
             content.drop(columns=["Date"], inplace=True)
+
+        # Delete odds from bookmakers   (OddsH, OddsA)
+        # Delete the result of the game, because we have result of the first team (A)
+        content.drop(columns=["OddsH", "OddsA", "A"], inplace=True)
+
         for index, row in content.iterrows():
             self.Games.append(row)
 
@@ -52,8 +58,12 @@ class Database:
         Data = []
         for GameId in Games_Ids:
             Data.append(self.Games[GameId])
+            
+        if len(Data) >= INPUT_MATCH_COUNT:
+            average_series = pd.concat(Data, axis=1).mean(axis=1)
+            return average_series
 
-        return Data
+        return None
 
 class Team:
     def __init__(self, Id):

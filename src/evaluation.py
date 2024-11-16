@@ -11,13 +11,14 @@ class Evaluator:
     DEFAULT_TEST_GAMES = os.path.join('..', 'data', 'games.csv') 
     DEFAULT_TEST_PLAYERS = os.path.join('..', 'data', 'players.csv')
 
-    def __init__(self, games_percent=0.2, test_games=DEFAULT_TEST_GAMES, test_players=DEFAULT_TEST_PLAYERS):
+    def __init__(self, games_percent=0.2, games_percentage_start=0, test_games=DEFAULT_TEST_GAMES, test_players=DEFAULT_TEST_PLAYERS):
         self.games = pd.read_csv(test_games, index_col=0)  
         self.games["Date"] = pd.to_datetime(self.games["Date"])
         self.games["Open"] = pd.to_datetime(self.games["Open"])
 
         games_number = int(self.games.shape[0] * games_percent)
-        self.games = self.games.iloc[:games_number]
+        games_start = int(self.games.shape[0] * games_percentage_start)
+        self.games = self.games.iloc[games_start:(games_number+games_start)]
 
         self.players = pd.read_csv(test_players, index_col=0)                                                 # TODO change .. to .
         self.players["Date"] = pd.to_datetime(self.players["Date"])

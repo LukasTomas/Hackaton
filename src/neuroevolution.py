@@ -1,5 +1,6 @@
 import time
 import math
+import glob
 import torch
 import random
 import threading
@@ -11,6 +12,8 @@ from evaluation import Evaluator
 import nn
 from hyperparams import POPULATION_SIZE, GENERATIONS, CROSSOVER_PROB, MUTATION_PROB, SELECTION_SIZE, NN_INPUT_SIZE, \
     MUTATION_STRENGTH, ELITE_COUNT
+
+MODEL_NAME = "best_nn_"
 
 
 def create_nn(individual):
@@ -38,7 +41,21 @@ def create_nn(individual):
 def init_population():
     population = []
 
-    for _ in range(POPULATION_SIZE):
+    saved_models = glob.glob("*.pth")
+    print(f'Loading {len(saved_models)} saved models')
+
+    for model_path in saved_models:
+        neural_network = nn.LinearNN()
+        neural_network.load_state_dict(torch.load(model_path))
+        
+        params = list(neural_network.state_dict().values())
+        flat_params = torch.cat([p.flatten() for p in neural_network.parameters()]).tolist()
+        
+        individual = creator.Individual(flat_params)
+        population.append(individual)
+
+    init_rest_number = POPULATION_SIZE - len(saved_models)
+    for _ in range(init_rest_number):
         neural_network = nn.LinearNN()  # Initialize the neural network
         params = list(neural_network.state_dict().values())
         # Initialize neural network and get flattened parameters more cleanly
@@ -66,7 +83,7 @@ def mutate(individual, mutation_rate=0.1, mutation_strength=0.1):
 
 def evaluate(individual):
     neural_network = create_nn(individual)
-    evaluator = Evaluator(games_percent=0.01)
+    evaluator = Evaluator(games_percent=0.01, games_percentage_start=0.8)
     bankroll = evaluator.evaluate(neural_network)
     return bankroll,
 
@@ -142,10 +159,14 @@ if __name__ == "__main__":
         for indiv in population:
             fitness_vals.append(indiv.fitness.values[0])
 
-
-        select_best = tools.selBest(population, 1)[0]
-        best_nn = create_nn(select_best)
-        torch.save(best_nn.state_dict(), 'new_best_nn.pth')
+        # Save the best individuals from the current population
+        number_best = 5
+        best_individuals = tools.selBest(population, number_best)
+        for i in range(len(best_individuals)):
+            if best_individuals[i].fitness.values[0] < 1000:
+                continue
+            best_nn = create_nn(best_individuals[i])
+            torch.save(best_nn.state_dict(), f'{MODEL_NAME}{i}_{int(best_individuals[i].fitness.values[0])}.pth')
 
         # Step 2: Tournament Selection
         selected_indivs = toolbox.select(population, SELECTION_SIZE)

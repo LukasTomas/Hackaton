@@ -18,7 +18,7 @@ class Model:
 
         if neuralNetwork is None:
             self.model = nn.LinearNN()
-            self.model.load_state_dict(torch.load(os.path.join('.', 'models', "new_best_nn_1.pth")))
+            self.model.load_state_dict(torch.load(os.path.join('.', "best_nn_0_1197.pth")))
         else:
             self.model = neuralNetwork
 
@@ -41,17 +41,14 @@ class Model:
             # Team_H_data = self.database.Return_team_data(HID)
             # Team_A_data = self.database.Return_team_data(AID)
 
-            if ((len(Team_A_data) == INPUT_MATCH_COUNT) and (
-                    len(Team_H_data) == INPUT_MATCH_COUNT)):  # TODO Not sure with the shape[index]
-                # tensor = self.data_processing.GetTensor(Team_A_data, Team_H_data)
-                int_list = []
+            if Team_A_data is not None and Team_H_data is not None:
+                double_list = []
                 for team in [Team_A_data, Team_H_data]:
-                    for series in team:
-                        int_list.extend(series.values)
-                tensor = torch.tensor(int_list).float()
+                    double_list.extend(team.values)
+                tensor = torch.tensor(double_list).float()
                 our_prob_H = self.model(tensor).item()
-                # our_prob_H = random.uniform(0, 1)
                 opps.loc[index, ["ProH"]] = our_prob_H
+
         return opps
 
     def Modify_opps_for_strategie(self, opps):
